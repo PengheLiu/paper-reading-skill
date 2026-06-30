@@ -1,0 +1,20 @@
+{
+  "name": "paper-reading-skill",
+  "version": "1.0.0",
+  "description": "Academic paper reading skill inspired by Li Mu's three-pass method. Triage papers, map content, critique evidence, plan reproduction, compare papers, and build literature maps.",
+  "author": {
+    "name": "PengheLiu",
+    "url": "https://github.com/PengheLiu"
+  },
+  "homepage": "https://github.com/PengheLiu/paper-reading-skill",
+  "repository": "https://github.com/PengheLiu/paper-reading-skill",
+  "license": "MIT",
+  "keywords": [
+    "paper-reading",
+    "research",
+    "literature-review",
+    "arxiv",
+    "li-mu",
+    "three-pass"
+  ]
+}
