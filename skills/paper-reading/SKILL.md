@@ -52,6 +52,72 @@ Implicit invocation depends on the frontmatter `description`. Keep paper, PDF, a
 - Translate unfamiliar notation or jargon into plain language, but keep original symbols when needed for implementation.
 - When the paper cannot be accessed or crucial details are missing, state the missing artifact and continue with the best-supported partial read.
 
+## Dependencies
+
+Before running the HTML output workflow, verify the following. Run the one-line check first; install only what is missing.
+
+### Quick check (run once after installing the skill)
+
+```bash
+python3 - <<'EOF'
+import sys
+print("Python:", sys.version.split()[0])
+
+missing = []
+
+try:
+    import fitz
+    print("pymupdf:", fitz.__version__)
+except ImportError:
+    missing.append("pymupdf")
+    print("pymupdf: MISSING")
+
+import http.server, urllib.request, base64, json, os, subprocess
+print("stdlib (http.server, base64, json, subprocess): ok")
+
+r = subprocess.run(["lsof", "-h"], capture_output=True)
+print("lsof:", "ok" if r.returncode in (0,1) else "MISSING")
+
+r = subprocess.run(["curl", "--version"], capture_output=True)
+print("curl:", "ok" if r.returncode == 0 else "MISSING")
+
+import platform
+if platform.system() == "Darwin":
+    print("browser opener: open (macOS built-in)")
+else:
+    r = subprocess.run(["which", "xdg-open"], capture_output=True)
+    print("browser opener: xdg-open", "ok" if r.returncode == 0 else "MISSING — install xdg-utils")
+
+if missing:
+    print("\nInstall missing packages:")
+    for pkg in missing:
+        print(f"  python3 -m pip install {pkg} --user")
+else:
+    print("\nAll dependencies satisfied.")
+EOF
+```
+
+### Dependency table
+
+| Dependency | Required for | How to install | Notes |
+|---|---|---|---|
+| **Python 3.7+** | All steps | macOS: pre-installed (`/usr/bin/python3`). Linux: `sudo apt install python3` | `python3 --version` must be ≥ 3.7 for `http.server --directory` |
+| **pymupdf** (`import fitz`) | Figure extraction (Step 2) | `python3 -m pip install pymupdf --user` | Provides PDF parsing, image extraction, page rendering. No system libs needed on macOS/Linux x86/arm64. Version ≥ 1.18 required. |
+| **http.server** | Local server (Step 3) | Built into Python stdlib — no install needed | Serves `~/paper-notes/` on localhost. |
+| **lsof** | Port conflict detection (Step 3) | macOS: pre-installed. Linux: `sudo apt install lsof` | Used to find a free port. Fallback: skip the loop and hardcode port 7410 if lsof is unavailable. |
+| **curl** | Server health check (Step 3) | macOS: pre-installed. Linux: `sudo apt install curl` | Used to wait until the server is ready. Fallback: `sleep 1` after starting the server. |
+| **open** (macOS) / **xdg-open** (Linux) | Open browser (Step 4) | macOS: built-in. Linux: `sudo apt install xdg-utils` | If neither is available, print the URL and ask the user to open it manually. |
+| **MathJax 3** (CDN) | LaTeX formula rendering in HTML | Loaded from `cdn.jsdelivr.net` at browser open time — no install | Requires internet access when the note is first opened. Formulas render as plain text if offline. |
+| **Mermaid** (CDN) | Architecture diagrams in HTML | Loaded from `cdn.jsdelivr.net` — no install | Only used when no PDF figure is available. Diagrams are omitted gracefully if offline. |
+
+### Internet access requirement
+
+The generated HTML loads MathJax and Mermaid from jsDelivr CDN **at browser open time**. The HTML file itself is fully self-contained (all figures are embedded as base64). If the user is offline:
+- Formulas display as raw LaTeX source — still readable
+- Mermaid diagrams are not rendered — the `<div class="mermaid">` block shows raw text
+
+No internet is needed to generate the HTML or start the local server.
+
 ## HTML Output
 
 After completing the reading analysis, always produce a local HTML reading note and open it in the browser. Do not skip this step for deep reads.
@@ -67,7 +133,7 @@ echo "Output: $OUTPUT"
 
 ### Step 2: Extract paper figures
 
-Before writing the HTML, extract all figures from the PDF as base64-encoded PNG strings so they can be embedded inline. This step requires `pymupdf` (`import fitz`). If not installed, run `python3 -m pip install pymupdf --user` first (check once with `python3 -c "import fitz"`).
+Before writing the HTML, extract all figures from the PDF as base64-encoded PNG strings so they can be embedded inline. Requires `pymupdf` — see the Dependencies section above. If the input is a URL or title (no local PDF), skip to Step 2b and use Mermaid diagrams only.
 
 ```python
 # Run as: python3 extract_figs.py <pdf_path>
