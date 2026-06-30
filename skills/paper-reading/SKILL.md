@@ -217,6 +217,14 @@ Produce all sections in the **user's language** (detect from the invocation prom
 
 Keep the tone analytical. Never pad with filler. Mark inferences explicitly with "（推断）" or "(inferred)".
 
+#### HTML generation safety rules
+
+Two bugs to avoid when generating HTML programmatically (e.g. via Python string construction):
+
+1. **Escape `<` and `>` inside LaTeX math.** MathJax processes math after the browser parses HTML, so bare `<` inside `$...$` or `$$...$$` blocks is treated as an HTML tag opener and truncates the formula. Always write `&lt;` and `&gt;` inside math delimiters. Example: `$x_{\&lt;k}$` not `$x_{<k}$`.
+
+2. **Write Chinese (and all non-ASCII) characters directly as UTF-8, not as HTML numeric entities.** Numeric entities like `&#27599;` (每) are fragile when assembled via string concatenation — a stray character can split the entity and produce garbled output (e.g. `&#27` + `ỗi` instead of `每`). Since the file is served as `charset=UTF-8`, raw UTF-8 Chinese characters are always safe and readable.
+
 ### Step 3: Find a free port and serve
 
 ```bash
