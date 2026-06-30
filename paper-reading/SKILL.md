@@ -65,12 +65,80 @@ OUTPUT="$HOME/paper-notes/${SLUG}.html"
 echo "Output: $OUTPUT"
 ```
 
-### Step 2: Write the HTML file
+### Step 2: Extract paper figures
+
+Before writing the HTML, extract all figures from the PDF as base64-encoded PNG strings so they can be embedded inline. This step requires `pymupdf` (`import fitz`). If not installed, run `python3 -m pip install pymupdf --user` first (check once with `python3 -c "import fitz"`).
+
+```python
+# Run as: python3 extract_figs.py <pdf_path>
+import fitz, base64, json, sys, os
+
+pdf_path = sys.argv[1]
+doc = fitz.open(pdf_path)
+figures = []   # list of {label, b64, caption, page}
+
+# Pass 1: embedded raster images (line art figures already rasterized in PDF)
+for pg_num in range(len(doc)):
+    page = doc[pg_num]
+    text_lines = [l.strip() for l in page.get_text().split('\n')]
+    captions = [l for l in text_lines if l.lower().startswith('figure')]
+    for img_idx, img_info in enumerate(page.get_images(full=True)):
+        xref = img_info[0]
+        pix = fitz.Pixmap(doc, xref)
+        if pix.width < 120 or pix.height < 120:   # skip decorations
+            pix = None; continue
+        if pix.n > 4:                              # CMYK → RGB
+            pix = fitz.Pixmap(fitz.csRGB, pix)
+        b64 = base64.b64encode(pix.tobytes("png")).decode()
+        cap = captions[img_idx] if img_idx < len(captions) else f"Figure (page {pg_num+1})"
+        figures.append({"label": f"fig_p{pg_num+1}_{img_idx}", "page": pg_num+1,
+                        "caption": cap, "b64": b64, "w": pix.width, "h": pix.height})
+        pix = None
+
+# Pass 2: pages whose figures are vector-drawn (no embedded raster images)
+#   — render full page at 2× and let the HTML crop to figure area
+vector_pages = set(range(len(doc))) - {f["page"]-1 for f in figures}
+for pg_num in vector_pages:
+    page = doc[pg_num]
+    text = page.get_text()
+    if not any(kw in text.lower() for kw in ['figure ', 'fig.']):
+        continue
+    captions = [l.strip() for l in text.split('\n') if l.strip().lower().startswith('figure')]
+    mat = fitz.Matrix(2.0, 2.0)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+    b64 = base64.b64encode(pix.tobytes("png")).decode()
+    cap = captions[0] if captions else f"Figure (page {pg_num+1})"
+    figures.append({"label": f"fig_p{pg_num+1}_render", "page": pg_num+1,
+                    "caption": cap, "b64": b64, "w": pix.width, "h": pix.height,
+                    "full_page": True})
+    pix = None
+
+doc.close()
+print(json.dumps(figures))   # consumed by the HTML-generation step
+```
+
+Run this script, capture its JSON output into a variable, and use the `b64` values as `data:image/png;base64,<b64>` image sources in the HTML. Each figure becomes:
+
+```html
+<figure style="text-align:center;margin:1.5rem 0;">
+  <img src="data:image/png;base64,{b64}"
+       style="display:block;max-width:100%;height:auto;margin:0 auto;
+              border:1px solid #ddd;border-radius:4px;background:#fff;"
+       alt="{caption}">
+  <figcaption style="font-size:0.82rem;color:#666;font-style:italic;margin-top:0.4rem;">
+    {caption}
+  </figcaption>
+</figure>
+```
+
+Place each figure **immediately after the section heading or analysis paragraph that discusses it**. Do not group all figures at the end. If a paper has no downloadable PDF, skip this step and use Mermaid diagrams as the sole visual.
+
+### Step 2b: Write the HTML file
 
 Write a single self-contained HTML file to `$OUTPUT`. All CSS and JS must be inline — no external fetches except the two CDN libraries below, which load from trusted sources:
 
 - MathJax for LaTeX math: load from `https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js`
-- Mermaid for diagrams: load from `https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js`
+- Mermaid for diagrams (used for flow/architecture when no PDF figure is available): load from `https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js`
 
 #### Required structure
 
@@ -135,7 +203,7 @@ Produce all sections in the **user's language** (detect from the invocation prom
 
 3. **Big Picture** — problem, prior limitation, core idea, main contribution, main evidence. Use plain prose, 3–5 short paragraphs.
 
-4. **Method** — architecture or algorithm as a Mermaid flowchart (`<div class="mermaid">`), followed by inputs/outputs, key assumptions, training/inference flow. Inline LaTeX for any equations: `$x = \sigma(Wx + b)$` for inline, `$$...$$` for display.
+4. **Method** — place the PDF's Figure 1 (architecture diagram) here as an `<img>` tag using the base64 data URI from Step 2. Follow with analysis text. Use a Mermaid flowchart only when no PDF figure is available (e.g. title-only invocation). Inline LaTeX for equations: `$x = \sigma(Wx + b)$` for inline, `$$...$$` for display. Place additional method figures (e.g. sub-component diagrams) directly after the paragraph that discusses them.
 
 5. **Evidence Ledger** — an HTML table (`<table class="claim-table">`) with columns: Claim, Evidence, Strength (badge: strong / weak / unsupported), Caveat, Verification needed.
 
@@ -143,7 +211,9 @@ Produce all sections in the **user's language** (detect from the invocation prom
 
 7. **Research Use** — what to reuse, what to avoid, follow-up papers (linked if arXiv), possible research ideas.
 
-8. **Footer** — "Generated by paper-reading skill · {date}" in small gray text.
+8. **Appendix Figures** — if the paper has additional figures in appendix or later pages (e.g. attention visualizations, ablation plots), include them in a final section with captions. Full-page renders (`full_page: true` from Step 2) go here rather than inline in earlier sections.
+
+9. **Footer** — "Generated by paper-reading skill · {date}" in small gray text.
 
 Keep the tone analytical. Never pad with filler. Mark inferences explicitly with "（推断）" or "(inferred)".
 
