@@ -3,9 +3,9 @@ name: mli-paper-reading
 description: "Academic paper reading and literature research skill for paper-reading, 论文阅读, 论文精读, 文献阅读, literature review, arXiv, DOI, PDF, paper title, or paper list tasks. Use to triage papers, apply Li Mu inspired three-pass reading, do section-by-section deep reading, critique methods and experiments, compare papers, plan reproduction, find research ideas, or build a literature map."
 allowed-tools: Bash, Write, Read, WebFetch
 slug: mli-paper-reading-penghel
-displayName: mli 论文精读
-version: 1.1.0
-summary: 基于李沐三遍读法的论文阅读 Skill，支持 arXiv/PDF/DOI，自动提取原文插图并生成含 MathJax 公式的本地 HTML 阅读笔记。
+displayName: 李沐论文精读 Skill
+version: 1.1.1
+summary: 基于李沐论文精读系列的三遍读法 Skill。先筛选（五个 C），再系统精读，最后拆论证链、审实验、评复现风险。支持 arXiv 链接、PDF 文件、DOI 和论文标题，自动从 PDF 提取原文插图，生成含 MathJax 公式渲染的本地 HTML 阅读笔记，在浏览器中图文并茂地展示。
 license: MIT
 ---
 
