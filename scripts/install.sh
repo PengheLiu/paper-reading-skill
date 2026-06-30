@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SKILL_NAME="paper-reading"
+SKILL_NAME="mli-paper-reading"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILL_SRC="$ROOT_DIR/skills/$SKILL_NAME"
@@ -147,6 +147,6 @@ cat <<EOF
 Done.
 
 Try:
-  Codex:       \$paper-reading 帮我精读这篇论文: <paper>
-  Claude Code: /paper-reading 帮我精读这篇论文: <paper>
+  Codex:       \$mli-paper-reading 帮我精读这篇论文: <paper>
+  Claude Code: /mli-paper-reading 帮我精读这篇论文: <paper>
 EOF

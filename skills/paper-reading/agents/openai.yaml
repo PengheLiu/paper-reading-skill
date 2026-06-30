@@ -1,4 +1,0 @@
-interface:
-  display_name: "论文阅读"
-  short_description: "基于李沐论文精读方法，筛选拆解精读复盘串联和评价论文"
-  default_prompt: "Use $paper-reading to deeply read this paper and produce a structured research note."

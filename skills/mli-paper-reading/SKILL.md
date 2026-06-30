@@ -1,5 +1,5 @@
 ---
-name: paper-reading
+name: mli-paper-reading
 description: "Academic paper reading and literature research skill for paper-reading, 论文阅读, 论文精读, 文献阅读, literature review, arXiv, DOI, PDF, paper title, or paper list tasks. Use to triage papers, apply Li Mu inspired three-pass reading, do section-by-section deep reading, critique methods and experiments, compare papers, plan reproduction, find research ideas, or build a literature map."
 allowed-tools: Bash, Write, Read, WebFetch
 ---

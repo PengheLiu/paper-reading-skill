@@ -1,15 +1,15 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "paper-reading-skill",
-  "description": "Academic paper reading skill inspired by Li Mu's three-pass method — triage, content mapping, evidence critique, reproduction planning, and literature survey.",
+  "name": "mli-paper-reading-skill",
+  "description": "Academic paper reading skill inspired by Li Mu's three-pass method — triage, content mapping, evidence critique, reproduction planning, and literature survey. Outputs a local HTML note with embedded paper figures, MathJax formulas, and Mermaid diagrams.",
   "owner": {
     "name": "PengheLiu",
     "url": "https://github.com/PengheLiu"
   },
   "plugins": [
     {
-      "name": "paper-reading-skill",
-      "version": "1.0.0",
+      "name": "mli-paper-reading-skill",
+      "version": "1.1.0",
       "description": "Academic paper reading skill inspired by Li Mu's three-pass method. Triage papers, map content, critique evidence, plan reproduction, compare papers, and build literature maps.",
       "author": {
         "name": "PengheLiu",
@@ -17,7 +17,7 @@
       },
       "category": "research",
       "source": "./",
-      "homepage": "https://github.com/PengheLiu/paper-reading-skill"
+      "homepage": "https://github.com/PengheLiu/mli-paper-reading-skill"
     }
   ]
 }
