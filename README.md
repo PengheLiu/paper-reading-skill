@@ -6,13 +6,14 @@
 
 ### Claude Code（推荐）
 
-在 Claude Code 里直接运行：
+在终端运行两条命令：
 
-```
-/plugin add PengheLiu/paper-reading-skill
+```bash
+claude plugin marketplace add PengheLiu/paper-reading-skill
+claude plugin install paper-reading-skill@paper-reading-skill
 ```
 
-安装完成后新开一个会话即可使用。
+第一条把本仓库注册为 marketplace source，第二条从中下载并安装插件。安装完成后新开一个 Claude Code 会话即可使用。
 
 ### Codex
 
